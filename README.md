@@ -1,10 +1,3 @@
- ______ _______ _    _          _   _ 
-|  ____|__   __| |  | |   /\   | \ | |
-| |__     | |  | |__| |  /  \  |  \| |
-|  __|    | |  |  __  | / /\ \ | . ` |
-| |____   | |  | |  | |/ ____ \| |\  |
-|______|  |_|  |_|  |_/_/    \_\_| \_|
-
 MORSE CODE DETECTION DEMO
 
 This is a quick and simple demonstration showing how easily Morse-code–encoded inputs can be detected using a very basic algorithm.
