@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<!-- saved from url=(0177)https://ppl-ai-code-interpreter-files.s3.amazonaws.com/web/direct-files/c97cf47c12c284cd41038891e6087fa3/91f610dc-cfab-4898-b24d-817fd45e27a9/5e1b2c85.html?utm_source=perplexity -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethan's Example Morse Code Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ead666 0%, #eaac0e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #dec20e 0%, #a2784b 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(234, 208, 102, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .output-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .output-section.show {
+            display: block;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .status.valid {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .status.invalid {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .decoded-section {
+            margin-top: 15px;
+        }
+
+        .decoded-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .decoded-item h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .decoded-item p {
+            color: #333;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .info {
+            margin-top: 30px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .info p {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ethan's Morse Code Detector</h1>
+
+        <div class="input-section">
+            <label for="morseInput">Enter Text or Morse Code:</label>
+            <textarea id="morseInput" placeholder="Enter morse code (e.g., .... . .-.. .-.. ---) or regular text"></textarea>
+        </div>
+
+        <button onclick="detectAndDecode()">Detect &amp; Decode</button>
+
+        <div id="output" class="output-section">
+            <div id="statusMessage" class="status"></div>
+            <div id="decodedOutput" class="decoded-section"></div>
+        </div>
+
+        <div class="info">
+            <p><strong>How to use:</strong> Enter morse code using dots (.) and dashes (-). Separate letters with spaces and words with forward slashes (/).</p>
+            <p><strong>Example:</strong> .... . .-.. .-.. --- / .-- --- .-. .-.. -..</p>
+        </div>
+    </div>
+
+    <script>
+        // Morse Code Library - Based on International Morse Code Standard
+        // Supports Latin and Cyrillic alphabets
+
+        const MORSE_TO_LATIN = {
+            '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E',
+            '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
+            '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O',
+            '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
+            '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y',
+            '--..': 'Z',
+            '-----': '0', '.----': '1', '..---': '2', '...--': '3', '....-': '4',
+            '.....': '5', '-....': '6', '--...': '7', '---..': '8', '----.': '9',
+            '.-.-.-': '.', '--..--': ',', '..--..': '?', '.----.': "'", '-.-.--': '!',
+            '-..-.': '/', '-.--.': '(', '-.--.-': ')', '.-...': '&', '---...': ':',
+            '-.-.-.': ';', '-...-': '=', '.-.-.': '+', '-....-': '-', '..--.-': '_',
+            '.-..-.': '"', '...-..-': '$', '.--.-.': '@'
+        };
+
+        const MORSE_TO_CYRILLIC = {
+            '.-': 'А', '-...': 'Б', '.--': 'В', '--.': 'Г', '-..': 'Д',
+            '.': 'Е', '...-': 'Ж', '--..': 'З', '..': 'И', '.---': 'Й',
+            '-.-': 'К', '.-..': 'Л', '--': 'М', '-.': 'Н', '---': 'О',
+            '.--.': 'П', '.-.': 'Р', '...': 'С', '-': 'Т', '..-': 'У',
+            '..-.': 'Ф', '....': 'Х', '-.-.': 'Ц', '---.': 'Ч', '----': 'Ш',
+            '--.-': 'Щ', '-.-..-': 'Ь', '-.--': 'Ы', '..-.': 'Э', '..--': 'Ю',
+            '.-.-': 'Я',
+            '-----': '0', '.----': '1', '..---': '2', '...--': '3', '....-': '4',
+            '.....': '5', '-....': '6', '--...': '7', '---..': '8', '----.': '9'
+        };
+
+        function isMorseCode(input) {
+            // Remove extra spaces and trim
+            const cleaned = input.trim().replace(/\s+/g, ' ');
+
+            // Empty input is not morse code
+            if (cleaned.length === 0) return false;
+
+            // Check if input contains only morse characters: dots, dashes, spaces, and slashes
+            const morsePattern = /^[.\-\s\/]+$/;
+
+            if (!morsePattern.test(cleaned)) {
+                return false;
+            }
+
+            // Check if there's at least one dot or dash
+            if (!/[.\-]/.test(cleaned)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function decodeMorse(morseCode, codeMap) {
+            // Clean up the input
+            const cleaned = morseCode.trim().replace(/\s+/g, ' ');
+
+            // Split by word separator (/)
+            const words = cleaned.split('/');
+
+            let decoded = '';
+
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i].trim();
+                if (word === '') continue;
+
+                // Split word into letters (separated by spaces)
+                const letters = word.split(' ');
+
+                for (let letter of letters) {
+                    if (letter === '') continue;
+
+                    if (codeMap[letter]) {
+                        decoded += codeMap[letter];
+                    } else {
+                        decoded += '#'; // Unknown character
+                    }
+                }
+
+                // Add space between words (but not after last word)
+                if (i < words.length - 1) {
+                    decoded += ' ';
+                }
+            }
+
+            return decoded;
+        }
+
+        function detectAndDecode() {
+            const input = document.getElementById('morseInput').value;
+            const outputSection = document.getElementById('output');
+            const statusMessage = document.getElementById('statusMessage');
+            const decodedOutput = document.getElementById('decodedOutput');
+
+            // Clear previous output
+            decodedOutput.innerHTML = '';
+
+            if (!input.trim()) {
+                outputSection.classList.remove('show');
+                return;
+            }
+
+            const isMorse = isMorseCode(input);
+
+            if (isMorse) {
+                // Decode morse code
+                const latinDecoded = decodeMorse(input, MORSE_TO_LATIN);
+                const cyrillicDecoded = decodeMorse(input, MORSE_TO_CYRILLIC);
+
+                statusMessage.textContent = 'This is morse code';
+                statusMessage.className = 'status valid';
+
+                decodedOutput.innerHTML = `
+                    <div class="decoded-item">
+                        <h3>Decoded (Latin):</h3>
+                        <p>${latinDecoded || 'Unable to decode'}</p>
+                    </div>
+                    <div class="decoded-item">
+                        <h3>Decoded (Cyrillic):</h3>
+                        <p>${cyrillicDecoded || 'Unable to decode'}</p>
+                    </div>
+                `;
+            } else {
+                statusMessage.textContent = "This isn't morse code";
+                statusMessage.className = 'status invalid';
+            }
+
+            outputSection.classList.add('show');
+        }
+
+        // Allow Enter key to trigger detection (with Shift+Enter for new lines)
+        document.getElementById('morseInput').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                detectAndDecode();
+            }
+        });
+    </script>
+
+</body></html>
